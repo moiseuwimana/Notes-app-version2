@@ -3,8 +3,8 @@ import Sidebar from "./components/Sidebar"
 import Editor from "./components/Editor"
 import Split from "react-split"
 import { nanoid } from "nanoid"
-import { onSnapshot } from "firebase/firestore"
-import { notesCollection } from "./firebase"
+import { onSnapshot, addDoc  } from "firebase/firestore"
+import { notesCollection} from "./firebase"
 
 
 export default function App() {
@@ -23,18 +23,18 @@ export default function App() {
              const notesArr = snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id
-             }))
+             })) // fetching data from database and store in "notesArr"
+             setNotes(notesArr) // set the notes for the fetched data.
         })
         return unsubscribe
-    }, []) // fetching data from database
+    }, []) 
 
-    function createNewNote() {
+    async function createNewNote() {
         const newNote = {
-            id: nanoid(),
             body: "# Type your markdown note's title here"
         }
-        setNotes(prevNotes => [newNote, ...prevNotes])
-        setCurrentNoteId(newNote.id)
+        const newNoteRef = await addDoc(notesCollection, newNote) // push data to database
+        setCurrentNoteId(newNoteRef.id)
     }
 
     function updateNote(text) {
