@@ -17,19 +17,28 @@ export default function App() {
     const [notes, setNotes] = React.useState([]);
     const [currentNoteId, setCurrentNoteId] = React.useState("")
     
+    /**
+     * Challenge:
+     * 1. Set up a new state variable called 'tempNoteText'. Initialize it as an empty string
+     * 2. Change the Editor so that it uses 'tempNoteText' and 'setTempNoteText' for displaying and changing the text instead of dealing directly with the 'currentNote' data.
+     * 3. Create a useEffect that, if there's a 'currentNote', sets the 'tempNoteText' to 'currentNote.body'. (This copies the current note's text into the 'tempNoteText' field so whenever the user changes the currentNote, the editor can display the correct text.)
+     */
+
+    const [tempNoteText, setTempNoteText] = React.useState("")
+
 
     const currentNote = 
         notes.find(note => note.id === currentNoteId) 
         || notes[0]
 
-    /**
-     * Challenge:
-     * 1. Add createAt and updateAt properties to the notes 
-     * When a note is first created, set the 'createdAt' and 'updatedAt' properties to 'Date.now()'. Whenever a note is modified, set the 'updatedAt' property to 'Date.now()'.
-     * 
-     * Create a new 'sortedNotes' array (doesn't need to be saved in state) that orders the items in the array from most-recently-updated to least-recently-updated.
-     */
+
     const sortedNotes = notes.sort((a,b) => b.updatedAt - a.updatedAt)
+
+    React.useEffect(()=>{
+        if (currentNote){
+            setTempNoteText(currentNote.body)
+        }
+    },[currentNote])
 
 
     React.useEffect(() => {
@@ -66,7 +75,7 @@ export default function App() {
                 body:text, 
                 updatedAt: Date.now() 
             }, {merge: true}) // merge helps to not replace other properties if exist.
-    }
+    } // update note in the firestore
 
     async function deleteNote(noteId) {
         const docRef = doc(db, "notes", noteId) // get the reference of what is needed to be deleted
@@ -92,8 +101,8 @@ export default function App() {
                         />
                         {
                         <Editor
-                            currentNote={currentNote}
-                            updateNote={updateNote}
+                            tempNoteText={tempNoteText}
+                            setTempNoteText={setTempNoteText}
                         />
                         }
                     </Split>
