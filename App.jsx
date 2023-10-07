@@ -22,6 +22,12 @@ export default function App() {
         notes.find(note => note.id === currentNoteId) 
         || notes[0]
 
+    /**
+     * Challenge:
+     * 1. Add createAt and updateAt properties to the notes 
+     * When a note is first created, set the 'createdAt' and 'updatedAt' properties to 'Date.now()'. Whenever a note is modified, set the 'updatedAt' property to 'Date.now()'.
+     */
+
     React.useEffect(() => {
         const unsubscribe = onSnapshot(notesCollection, function(snapshot){
              // Sync up our local notes array with the snapshot data
@@ -41,6 +47,8 @@ export default function App() {
 
     async function createNewNote() {
         const newNote = {
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
             body: "# Type your markdown note's title here"
         }
         const newNoteRef = await addDoc(notesCollection, newNote) // push data to database
@@ -49,7 +57,11 @@ export default function App() {
 
     async function updateNote(text) {
         const docRef = doc(db, "notes", currentNoteId)
-        await setDoc(docRef, { body:text }, {merge: true}) // merge helps to not replace other properties if exist.
+        await setDoc(docRef, 
+            { 
+                body:text, 
+                updatedAt: Date.now() 
+            }, {merge: true}) // merge helps to not replace other properties if exist.
     }
 
     async function deleteNote(noteId) {
