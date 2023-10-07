@@ -3,16 +3,21 @@ import Sidebar from "./components/Sidebar"
 import Editor from "./components/Editor"
 import Split from "react-split"
 import { nanoid } from "nanoid"
-import { onSnapshot, addDoc, doc, deleteDoc  } from "firebase/firestore"
+import { 
+    onSnapshot, 
+    addDoc, 
+    doc, 
+    deleteDoc, 
+    setDoc   
+} from "firebase/firestore"
 import { notesCollection, db} from "./firebase"
 
 
 export default function App() {
     const [notes, setNotes] = React.useState([]);
-    const [currentNoteId, setCurrentNoteId] = React.useState(
-        (notes[0]?.id) || ""
-    )
+    const [currentNoteId, setCurrentNoteId] = React.useState("")
     
+
     const currentNote = 
         notes.find(note => note.id === currentNoteId) 
         || notes[0]
@@ -27,7 +32,12 @@ export default function App() {
              setNotes(notesArr) // set the notes for the fetched data.
         })
         return unsubscribe
-    }, []) 
+    }, [])
+    React.useEffect(()=>{
+        if (!currentNoteId){
+            setCurrentNoteId(notes[0]?.id)
+        }
+    },[notes])
 
     async function createNewNote() {
         const newNote = {
@@ -37,20 +47,9 @@ export default function App() {
         setCurrentNoteId(newNoteRef.id)
     }
 
-    function updateNote(text) {
-        setNotes(oldNotes => {
-            const newArray = []
-            for (let i = 0; i < oldNotes.length; i++) {
-                const oldNote = oldNotes[i]
-                if (oldNote.id === currentNoteId) {
-                    // Put the most recently-modified note at the top
-                    newArray.unshift({ ...oldNote, body: text })
-                } else {
-                    newArray.push(oldNote)
-                }
-            }
-            return newArray
-        })
+    async function updateNote(text) {
+        const docRef = doc(db, "notes", currentNoteId)
+        await setDoc(docRef, { body:text }, {merge: true}) // merge helps to not replace other properties if exist.
     }
 
     async function deleteNote(noteId) {
@@ -76,12 +75,10 @@ export default function App() {
                             deleteNote={deleteNote}
                         />
                         {
-                            currentNoteId &&
-                            notes.length > 0 &&
-                            <Editor
-                                currentNote={currentNote}
-                                updateNote={updateNote}
-                            />
+                        <Editor
+                            currentNote={currentNote}
+                            updateNote={updateNote}
+                        />
                         }
                     </Split>
                     :
